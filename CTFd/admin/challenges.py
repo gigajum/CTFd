@@ -5,7 +5,7 @@ from CTFd.plugins.keys import get_key_class, KEY_CLASSES
 from CTFd.plugins.challenges import get_chal_class, CHALLENGE_CLASSES
 
 from CTFd import utils
-
+import math
 import os
 
 admin_challenges = Blueprint('admin_challenges', __name__)
@@ -25,7 +25,7 @@ def admin_chal_types():
 @admins_only
 def admin_chals():
     if request.method == 'POST':
-        chals = Challenges.query.add_columns('id', 'type', 'name', 'value', 'description', 'category', 'hidden', 'max_attempts').order_by(Challenges.value).all()
+        chals = Challenges.query.add_columns('id', 'type', 'name', 'value', 'description', 'category', 'hidden', 'max_attempts','dynamic').order_by(Challenges.value).all()
 
         teams_with_points = db.session.query(Solves.teamid).join(Teams).filter(
             Teams.banned == False).group_by(Solves.teamid).count()
@@ -52,7 +52,8 @@ def admin_chals():
                 'max_attempts': x.max_attempts,
                 'type': x.type,
                 'type_name': type_name,
-                'percentage_solved': percentage
+                'percentage_solved': percentage,
+                'dynamic':x.dynamic
             })
 
         db.session.close()
@@ -225,12 +226,19 @@ def admin_create_chal():
         files = request.files.getlist('files[]')
 
         # Create challenge
-        chal = Challenges(request.form['name'], request.form['desc'], request.form['value'], request.form['category'], int(request.form['chaltype']))
+        if 'dynamic_points' in request.form:
+            chal_value = Config.query.filter_by(key='dynamic_points_max').first().value
+        else:
+            chal_value = request.form['value']
+
+        chal = Challenges(request.form['name'], request.form['desc'], chal_value , request.form['category'], int(request.form['chaltype']))
         if 'hidden' in request.form:
             chal.hidden = True
         else:
             chal.hidden = False
 
+        if 'dynamic_points' in request.form:
+            chal.dynamic = True
         max_attempts = request.form.get('max_attempts')
         if max_attempts and max_attempts.isdigit():
             chal.max_attempts = int(max_attempts)
@@ -279,7 +287,11 @@ def admin_update_chal():
     challenge = Challenges.query.filter_by(id=request.form['id']).first_or_404()
     challenge.name = request.form['name']
     challenge.description = request.form['desc']
-    challenge.value = int(request.form.get('value', 0)) if request.form.get('value', 0) else 0
+    if 'dynamic_points' in request.form:
+        challenge.value = utils.calc_dynamic_points(request.form['id'])
+        challenge.dynamic = True
+    else:
+        challenge.value = int(request.form.get('value', 0)) if request.form.get('value', 0) else 0
     challenge.max_attempts = int(request.form.get('max_attempts', 0)) if request.form.get('max_attempts', 0) else 0
     challenge.category = request.form['category']
     challenge.hidden = 'hidden' in request.form

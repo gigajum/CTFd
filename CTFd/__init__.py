@@ -108,6 +108,12 @@ def create_app(config='CTFd.config.Config'):
 
         if not utils.get_config('ctf_theme'):
             utils.set_config('ctf_theme', 'original')
+        if not utils.get_config('dynamic_points_max'):
+            utils.set_config('dynamic_points_max', '500')
+        if not utils.get_config('dynamic_points_min'):
+            utils.set_config('dynamic_points_min', '50')
+        if not utils.get_config('dynamic_point_decay_speed'):
+            utils.set_config('dynamic_point_decay_speed', '60')
 
         from CTFd.views import views
         from CTFd.challenges import challenges

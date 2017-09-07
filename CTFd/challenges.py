@@ -2,11 +2,11 @@ import json
 import logging
 import re
 import time
-
+import math
 from flask import render_template, request, redirect, jsonify, url_for, session, Blueprint, abort
 from sqlalchemy.sql import or_
 
-from CTFd.models import db, Challenges, Files, Solves, WrongKeys, Keys, Tags, Teams, Awards, Hints, Unlocks
+from CTFd.models import db, Challenges, Files, Solves, WrongKeys, Keys, Tags, Teams, Awards, Hints, Unlocks, Config
 from CTFd.plugins.keys import get_key_class
 from CTFd.plugins.challenges import get_chal_class
 
@@ -292,6 +292,11 @@ def chal(chalid):
                 if utils.ctftime() or utils.is_admin():
                     solve = Solves(teamid=session['id'], chalid=chalid, ip=utils.get_ip(), flag=provided_key)
                     db.session.add(solve)
+                    #apply dynamic points calculation
+                    if chal.dynamic:
+                        challenge = Challenges.query.filter_by(id=chalid).first_or_404()
+                        challenge.value = utils.calc_dynamic_points(chalid)
+                        db.session.add(challenge)
                     db.session.commit()
                     db.session.close()
                 logger.info("[{0}] {1} submitted {2} with kpm {3} [CORRECT]".format(*data))

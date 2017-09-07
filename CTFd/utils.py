@@ -19,6 +19,7 @@ import time
 import dataset
 import zipfile
 import io
+import math
 
 from email.mime.text import MIMEText
 from flask import current_app as app, request, redirect, url_for, session, render_template, abort
@@ -29,7 +30,7 @@ from six.moves.urllib.parse import urlparse, urljoin, quote, unquote
 from sqlalchemy.exc import InvalidRequestError, IntegrityError
 from werkzeug.utils import secure_filename
 
-from CTFd.models import db, WrongKeys, Pages, Config, Tracking, Teams, Files, ip2long, long2ip
+from CTFd.models import db, WrongKeys, Pages, Config, Tracking, Teams, Files, ip2long, long2ip, Solves
 
 cache = Cache()
 migrate = Migrate()
@@ -749,3 +750,15 @@ def import_ctf(backup, segments=None, erase=False):
         target = file(full_path, "wb")
         with source, target:
             shutil.copyfileobj(source, target)
+
+
+def calc_dynamic_points(id):
+    solves = Solves.query.join(Teams, Solves.teamid == Teams.id).filter(Solves.chalid == id, Teams.banned == False).count()
+    max_pts = float(get_config('dynamic_points_max'))
+    min_pts = float(get_config('dynamic_points_min'))
+    dynamic_point_decay_speed = float(get_config('dynamic_point_decay_speed'))
+    value_new = math.floor(min_pts + ((max_pts - min_pts) * pow(dynamic_point_decay_speed / (dynamic_point_decay_speed - 1.0 + max(solves,1)),2)))
+    if solves > 1:
+        return value_new
+    else:
+        return max_pts

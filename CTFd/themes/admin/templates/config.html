@@ -60,6 +60,18 @@
 							Hide Scores from public view
 						</label>
 					</div>
+					<div class="form-group">
+						<label for="dynamic_points_max">Maximal points for a dynamic points challenge:</label>
+						<input class="form-control" id='dynamic_points_max' name='dynamic_points_max' type='number' placeholder="Maximal points for a dynamic challenge" {% if dynamic_points_max is defined and dynamic_points_max != None %}value="{{ dynamic_points_max }}"{% endif %}>
+					</div>
+					<div class="form-group">
+						<label for="dynamic_points_min">Minimal points for a dynamic points challenge:</label>
+						<input class="form-control" id='dynamic_points_min' name='dynamic_points_min' type='number' placeholder="Minimal points for a dynamic challenge" {% if dynamic_points_min is defined and dynamic_points_min != None %}value="{{ dynamic_points_min }}"{% endif %}>
+					</div>
+					<div class="form-group">
+						<label for="dynamic_point_decay_speed">Dynamic points decay speed value</label>
+						<input class="form-control" id='dynamic_point_decay_speed' name='dynamic_point_decay_speed' type='number' placeholder="How many solves to 50% points" {% if dynamic_point_decay_speed is defined and dynamic_point_decay_speed != None %}value="{{ dynamic_point_decay_speed }}"{% endif %}>
+					</div>					
 				</div>
 				<div role="tabpanel" class="tab-pane" id="accounts-section">
 					<div class="checkbox">

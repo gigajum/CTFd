@@ -136,6 +136,11 @@ def admin_config():
             mail_ssl = utils.set_config('mail_ssl', mail_ssl)
             mail_useauth = utils.set_config('mail_useauth', mail_useauth)
 
+        dynamic_points_max = utils.set_config("dynamic_points_max", request.form.get('dynamic_points_max', None))
+        dynamic_points_min = utils.set_config("dynamic_points_min", request.form.get('dynamic_points_min', None))
+        dynamic_point_decay_speed = utils.set_config("dynamic_point_decay_speed", request.form.get('dynamic_point_decay_speed', None))
+
+
         mail_server = utils.set_config("mail_server", request.form.get('mail_server', None))
         mail_port = utils.set_config("mail_port", request.form.get('mail_port', None))
 
@@ -161,9 +166,15 @@ def admin_config():
         db.session.add(db_end)
 
         db.session.commit()
+
+        #update all dynamic points
+        cache.clear() #config does not get updated, so we only get the cached values and not the new we just submitted :(
+        for dynamic_challenge in Challenges.query.filter_by(dynamic=True).all():
+            dynamic_challenge.value = utils.calc_dynamic_points(dynamic_challenge.id)
+            db.session.add(dynamic_challenge)
+        db.session.commit() #commit again
         db.session.close()
-        with app.app_context():
-            cache.clear()
+
         return redirect(url_for('admin.admin_config'))
 
     with app.app_context():
@@ -195,6 +206,9 @@ def admin_config():
     prevent_registration = utils.get_config('prevent_registration')
     prevent_name_change = utils.get_config('prevent_name_change')
     verify_emails = utils.get_config('verify_emails')
+    dynamic_points_max = utils.get_config('dynamic_points_max')
+    dynamic_points_min = utils.get_config('dynamic_points_min')
+    dynamic_point_decay_speed = utils.get_config('dynamic_point_decay_speed')
 
     db.session.commit()
     db.session.close()
@@ -225,4 +239,7 @@ def admin_config():
                            prevent_name_change=prevent_name_change,
                            verify_emails=verify_emails,
                            view_after_ctf=view_after_ctf,
-                           themes=themes)
+                           themes=themes,
+                           dynamic_points_min=dynamic_points_min,
+                           dynamic_points_max=dynamic_points_max,
+                           dynamic_point_decay_speed=dynamic_point_decay_speed)

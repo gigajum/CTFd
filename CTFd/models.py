@@ -50,6 +50,7 @@ class Challenges(db.Model):
     category = db.Column(db.String(80))
     type = db.Column(db.Integer)
     hidden = db.Column(db.Boolean)
+    dynamic = db.Column(db.Boolean)
 
     def __init__(self, name, description, value, category, type=0):
         self.name = name

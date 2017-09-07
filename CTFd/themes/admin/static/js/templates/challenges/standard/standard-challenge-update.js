@@ -274,6 +274,13 @@ $(".tag-insert").keyup(function (e) {
     }
 });
 
+$('#dynamic_points').change(function() {
+    if(this.checked) {
+        $('.chal-value').prop('disabled', true);
+    } else {
+        $('.chal-value').prop('disabled', false);
+    }
+});
 $('#limit_max_attempts').change(function() {
     if(this.checked) {
         $('#chal-attempts-group').show();
@@ -362,6 +369,12 @@ function loadchal(id, update) {
     $('.chal-name').val(obj.name);
     $('.chal-desc').val(obj.description);
     $('.chal-value').val(obj.value);
+    $('.chal-value').prop('disabled', false);
+    $('.chal-dynamic').prop('checked', false);
+    if (obj.dynamic) {
+        $('.chal-value').prop('disabled', true);
+        $('.chal-dynamic').prop('checked', true);
+    }
     if (parseInt(obj.max_attempts) > 0){
         $('.chal-attempts').val(obj.max_attempts);
         $('#limit_max_attempts').prop('checked', true);
